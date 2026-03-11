@@ -22,30 +22,24 @@ export default function ExperimentsPage() {
   const pollProgress = (experimentId: string) => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${API_BASE}/progress/${experimentId}`);
-        const data = await res.json();
+        const res = await fetch(`http://127.0.0.1:8000/progress/${experimentId}`);
   
-        setProgress(data.progress);
-  
-        if (data.status === "failed") {
-          clearInterval(interval);
-          setRunning(false);
-          setError(data.error || "Experiment failed.");
-          return;
+        if (!res.ok) {
+          throw new Error("Progress request failed");
         }
+  
+        const data = await res.json();
+        setProgress(data.progress);
   
         if (data.progress >= 100) {
           clearInterval(interval);
           setRunning(false);
-  
-          const resultRes = await fetch(`${API_BASE}/result/${experimentId}`);
-          const resultData = await resultRes.json();
-          setResult(resultData.result);
         }
       } catch (error) {
         clearInterval(interval);
         setRunning(false);
-        setError("Failed to retrieve progress.");
+        setProgress(0);
+        setError("Lost connection to the local backend.");
       }
     }, 1000);
   };
@@ -53,6 +47,16 @@ export default function ExperimentsPage() {
   const runExperiment = async () => {
     const patientCount = Number(patients);
     const levelCount = Number(levels);
+  
+    if (patientCount < 10) {
+      setError("Number of patients must be at least 10.");
+      return;
+    }
+  
+    if (levelCount < 1) {
+      setError("Treatment levels must be at least 1.");
+      return;
+    }
   
     if (patientCount * levelCount > 5000) {
       setError("Patients × Levels must be ≤ 5000.");
@@ -103,19 +107,26 @@ export default function ExperimentsPage() {
       );
     }
   
-    const res = await fetch(`${API_BASE}/run-experiment`, {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const res = await fetch("http://127.0.0.1:8000/run-experiment", {
+        method: "POST",
+        body: formData,
+      });
   
-    if (!res.ok) {
+      if (!res.ok) {
+        setRunning(false);
+        setProgress(0);
+        setError("Failed to start experiment.");
+        return;
+      }
+  
+      const data = await res.json();
+      pollProgress(data.experimentId);
+    } catch (error) {
       setRunning(false);
-      setError("Failed to start experiment.");
-      return;
+      setProgress(0);
+      setError("Local backend is not running. Please start the backend and try again.");
     }
-  
-    const data = await res.json();
-    pollProgress(data.experimentId);
   };
 
 
@@ -163,6 +174,7 @@ export default function ExperimentsPage() {
                 <label>Number of Patients</label>
                 <input
                   type="number"
+                  min={10}
                   value={patients}
                   onChange={(e) => setPatients(e.target.value)}
                 />
@@ -172,6 +184,7 @@ export default function ExperimentsPage() {
                 <label>Treatment Levels</label>
                 <input
                   type="number"
+                  min={1}
                   value={levels}
                   onChange={(e) => setLevels(e.target.value)}
                 />
