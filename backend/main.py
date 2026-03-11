@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
 
 app = FastAPI()
 
@@ -9,6 +10,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:3000/experiments",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -27,8 +29,8 @@ async def run_experiment(
     levels: int = Form(...),
     costStructure: str = Form(...),
     marginalStructure: str = Form(...),
-    datasetConfig: str | None = Form(None),
-    datasetFile: UploadFile | None = File(None),
+    datasetConfig: Optional[str] = Form(None),
+    datasetFile: Optional[UploadFile] = File(None),
 ):
     file_info = None
 
