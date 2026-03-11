@@ -17,29 +17,50 @@ export default function ExperimentsPage() {
   const [datasetFile, setDatasetFile] = useState<File | null>(null);
   const [result, setResult] = useState<any>(null);
 
+  const [activeTab, setActiveTab] = useState<"area" | "budget" | "time">("area");
+
   const API_BASE = "http://127.0.0.1:8000";
 
   const pollProgress = (experimentId: string) => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/progress/${experimentId}`);
+        const res = await fetch(`${API_BASE}/progress/${experimentId}`);
   
         if (!res.ok) {
-          throw new Error("Progress request failed");
+          throw new Error("Failed to retrieve progress.");
         }
   
         const data = await res.json();
+  
         setProgress(data.progress);
   
-        if (data.progress >= 100) {
+        if (data.status === "failed") {
           clearInterval(interval);
           setRunning(false);
+          setProgress(0);
+          setError(data.error || "Experiment failed.");
+          return;
+        }
+  
+        if (data.progress >= 100 && data.status === "complete") {
+          clearInterval(interval);
+          setRunning(false);
+  
+          const resultRes = await fetch(`${API_BASE}/result/${experimentId}`);
+  
+          if (!resultRes.ok) {
+            throw new Error("Failed to retrieve experiment result.");
+          }
+  
+          const resultData = await resultRes.json();
+          setResult(resultData.result);
+          return;
         }
       } catch (error) {
         clearInterval(interval);
         setRunning(false);
         setProgress(0);
-        setError("Lost connection to the local backend.");
+        setError("Failed to retrieve progress or result.");
       }
     }, 1000);
   };
@@ -84,6 +105,8 @@ export default function ExperimentsPage() {
     setError("");
     setRunning(true);
     setProgress(0);
+    setActiveTab("area");
+    setResult(null);
   
     const formData = new FormData();
   
@@ -255,11 +278,76 @@ export default function ExperimentsPage() {
             <section className="output">
               <h1 className="sectionTitle">Experiment Output</h1>
 
-              <div className="placeholder">
-                Output from the experiment will appear here.
-              </div>
-            </section>
+              {!result ? (
+                <div className="placeholder">
+                  Output from the experiment will appear here.
+                </div>
+              ) : (
+                <div className="visualizationPanel">
+                  <div className="visualizationTabs">
+                    <button
+                      className={`tabButton ${activeTab === "area" ? "activeTab" : ""}`}
+                      onClick={() => setActiveTab("area")}
+                    >
+                      Area Output
+                    </button>
 
+                    <button
+                      className={`tabButton ${activeTab === "budget" ? "activeTab" : ""}`}
+                      onClick={() => setActiveTab("budget")}
+                    >
+                      Per Budget Allocations
+                    </button>
+
+                    <button
+                      className={`tabButton ${activeTab === "time" ? "activeTab" : ""}`}
+                      onClick={() => setActiveTab("time")}
+                    >
+                      Time Analysis
+                    </button>
+                  </div>
+
+                  <div className="tabContent">
+                    {activeTab === "area" && (
+                      <div className="areaOutputGrid">
+                        {Object.entries(result.evaluation?.summary || {}).map(([key, value]) => {
+                          const displayNames: Record<string, string> = {
+                            lfp: "LFP",
+                            pag: "PAG",
+                            pag_star: "PAG*",
+                            ifp: "IFP",
+                            pgp: "PGP",
+                          };
+
+                          return (
+                            <div key={key} className="areaCard">
+                              <div className="areaCardTitle">
+                                {displayNames[key] || key.toUpperCase()}
+                              </div>
+                              <div className="areaCardValue">
+                                {Number(value).toFixed(4)}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {activeTab === "budget" && (
+                      <div className="placeholderTab">
+                        Per-budget allocation visualization will appear here.
+                      </div>
+                    )}
+
+                    {activeTab === "time" && (
+                      <div className="placeholderTab">
+                        Time analysis visualization will appear here.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </section>
           </div>
 
 
@@ -282,6 +370,7 @@ export default function ExperimentsPage() {
 
         </div>
       </div>
+
 
     </main>
   );
