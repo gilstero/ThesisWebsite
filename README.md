@@ -1,5 +1,3 @@
----
-
 # ML-AUTOC Experiment Platform
 
 This repository contains the software accompanying the research project on **Multi-Level AUTOC (ML-AUTOC)**. The platform is designed to facilitate reproducibility and experimentation with the algorithms and experimental configurations described in the associated paper.
