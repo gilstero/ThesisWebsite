@@ -38,18 +38,28 @@ a {
 }
 
 .title {
-  font-size: 3rem;
+  font-size: 2.6rem;
   font-weight: 700;
-  margin-bottom: 16px;
   text-align: center;
+  margin-bottom: 10px;
+  line-height: 1.25;
+}
+
+.paperTitle {
+  font-size: 1.4rem;
+  font-weight: 500;
+  text-align: center;
+  color: #374151;
+  margin-bottom: 18px;
+  font-style: italic;
 }
 
 .subtitle {
-  font-size: 1.15rem;
-  color: #4b5563;
+  font-size: 1.05rem;
   text-align: center;
+  color: #4b5563;
   max-width: 700px;
-  margin: 0 auto 32px auto;
+  margin: 0 auto 30px auto;
   line-height: 1.6;
 }
 

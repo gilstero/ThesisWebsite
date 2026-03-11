@@ -4,9 +4,16 @@ export default function Home() {
   return (
     <main className="page">
       <section className="hero">
-        <h1 className="title">ML-AUTOC Experiment Archive</h1>
+        <h1 className="title">
+          Multi-Level Area Under the Targeting Operating Characteristic Experiment Archive
+        </h1>
+
+        <h1 className="paperTitle">
+          “Precedence-Aware Resource Allocation: Extending the AUTOC Framework to Multi-Level Treatments”
+        </h1>
+
         <p className="subtitle">
-          Explore downloadable code and experiment materials from my paper.
+          Explore downloadable code and experiment materials from my undergraduate thesis.
         </p>
 
         <div className="buttonRow">
