@@ -15,18 +15,32 @@ export default function ExperimentsPage() {
   const [marginalStructure, setMarginalStructure] = useState("random");
 
   const [datasetFile, setDatasetFile] = useState<File | null>(null);
+  const [result, setResult] = useState<any>(null);
+
+  const API_BASE = "http://127.0.0.1:8000";
 
   const pollProgress = (experimentId: string) => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/progress/${experimentId}`);
+        const res = await fetch(`${API_BASE}/progress/${experimentId}`);
         const data = await res.json();
   
         setProgress(data.progress);
   
+        if (data.status === "failed") {
+          clearInterval(interval);
+          setRunning(false);
+          setError(data.error || "Experiment failed.");
+          return;
+        }
+  
         if (data.progress >= 100) {
           clearInterval(interval);
           setRunning(false);
+  
+          const resultRes = await fetch(`${API_BASE}/result/${experimentId}`);
+          const resultData = await resultRes.json();
+          setResult(resultData.result);
         }
       } catch (error) {
         clearInterval(interval);
@@ -89,7 +103,7 @@ export default function ExperimentsPage() {
       );
     }
   
-    const res = await fetch("/api/run-experiment", {
+    const res = await fetch(`${API_BASE}/run-experiment`, {
       method: "POST",
       body: formData,
     });
