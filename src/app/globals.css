@@ -25,6 +25,11 @@ a {
   justify-content: center;
   align-items: flex-start;
   padding: 60px 20px;
+
+  background-image: url("/AllocationHeatmap.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .hero,
