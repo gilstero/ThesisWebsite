@@ -352,7 +352,7 @@ export default function ExperimentsPage() {
 
 
           {/* PROGRESS BAR BELOW PANELS */}
-
+          <section className="progressbackground">
           <div className="progressContainer">
 
             <div className="progressBar">
@@ -367,6 +367,7 @@ export default function ExperimentsPage() {
             </p>
 
           </div>
+          </section>
 
         </div>
       </div>

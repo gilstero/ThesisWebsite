@@ -158,3 +158,10 @@ a {
     justify-content: center;
   }
 }
+
+.progressbackground {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}

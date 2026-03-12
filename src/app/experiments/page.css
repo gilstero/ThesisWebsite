@@ -290,3 +290,11 @@
   text-align: center;
   padding: 20px;
 }
+
+.page {
+  min-height: 100vh;
+  background-image: url("/AllocationHeatmap.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
