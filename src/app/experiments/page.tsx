@@ -131,8 +131,6 @@ function TocChart({ result }: { result: ExperimentResult }) {
   const width = svgWidth - margin.left - margin.right;
   const height = svgHeight - margin.top - margin.bottom;
   const zeroY = height - ((0 - min) / (max - min || 1)) * height;
-  const maxLabel = max.toFixed(3);
-  const minLabel = min.toFixed(3);
   const yTicks = getTickValues(min, max);
 
   return (
@@ -318,6 +316,7 @@ export default function ExperimentsPage() {
   const [patients, setPatients] = useState("1000");
   const [levels, setLevels] = useState("3");
   const [error, setError] = useState("");
+  const [datasetStatus, setDatasetStatus] = useState("");
   const [costStructure, setCostStructure] = useState("default");
   const [marginalStructure, setMarginalStructure] = useState("random");
   const [datasetFile, setDatasetFile] = useState<File | null>(null);
@@ -415,6 +414,7 @@ export default function ExperimentsPage() {
     }
 
     setError("");
+    setDatasetStatus("");
     setRunning(true);
     setProgress(0);
     setActiveTab("area");
@@ -462,6 +462,48 @@ export default function ExperimentsPage() {
       setProgress(0);
       setError("Local backend is not running. Please start the backend and try again.");
     }
+  };
+
+  const createDataset = () => {
+    const patientCount = Number(patients);
+    const levelCount = Number(levels);
+
+    if (datasetFile) {
+      const isCsvByType =
+        datasetFile.type === "text/csv" || datasetFile.type === "application/vnd.ms-excel";
+      const isCsvByName = datasetFile.name.toLowerCase().endsWith(".csv");
+
+      if (!isCsvByType && !isCsvByName) {
+        setDatasetStatus("");
+        setError("The uploaded dataset must be a CSV file.");
+        return;
+      }
+
+      setError("");
+      setDatasetStatus(`Dataset "${datasetFile.name}" is ready.`);
+      return;
+    }
+
+    if (patientCount < 10) {
+      setDatasetStatus("");
+      setError("Number of patients must be at least 10.");
+      return;
+    }
+
+    if (levelCount < 1) {
+      setDatasetStatus("");
+      setError("Treatment levels must be at least 1.");
+      return;
+    }
+
+    if (patientCount * levelCount > 5000) {
+      setDatasetStatus("");
+      setError("Patients × Levels must be ≤ 5000.");
+      return;
+    }
+
+    setError("");
+    setDatasetStatus("Dataset configuration is valid and ready to run.");
   };
 
   return (
@@ -538,18 +580,25 @@ export default function ExperimentsPage() {
                       const validName = file.name.toLowerCase().endsWith(".csv");
 
                       if (!validType && !validName) {
+                        setDatasetStatus("");
                         setError("The uploaded dataset must be a CSV file.");
                       } else {
                         setError("");
+                        setDatasetStatus(`Dataset "${file.name}" is ready.`);
                       }
+                    } else {
+                      setDatasetStatus("");
                     }
                   }}
                 />
               </div>
 
               {error && <p className="inputError">{error}</p>}
+              {datasetStatus && <p className="inputSuccess">{datasetStatus}</p>}
 
-              <button className="createButton">Create Dataset</button>
+              <button className="createButton" onClick={createDataset}>
+                Create Dataset
+              </button>
               <button className="runButton" onClick={runExperiment}>
                 Run Experiment
               </button>
@@ -590,7 +639,12 @@ export default function ExperimentsPage() {
                       <div className="resultsStack">
                         <div className="areaOutputGrid">
                           {Object.entries(result.evaluation?.summary || {}).map(([key, value]) => (
-                            <div key={key} className="areaCard">
+                            <div
+                              key={key}
+                              className={`areaCard ${
+                                Number(value) > 0 ? "areaCardPositive" : Number(value) < 0 ? "areaCardNegative" : ""
+                              }`}
+                            >
                               <div className="areaCardTitle">{formatPolicyName(key)}</div>
                               <div className="areaCardValue">{Number(value).toFixed(4)}</div>
                             </div>
