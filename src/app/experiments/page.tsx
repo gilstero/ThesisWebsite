@@ -526,7 +526,7 @@ export default function ExperimentsPage() {
             <li>Return to this page and run your experiment.</li>
           </ol>
 
-          <a href="/mlautoc-backend.zip" download className="backendDownloadButton">
+          <a href="/backend.zip" download className="backendDownloadButton">
             Download Backend
           </a>
         </div>
