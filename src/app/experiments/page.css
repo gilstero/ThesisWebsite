@@ -359,6 +359,11 @@
   stroke-width: 1;
 }
 
+.chartTickLabel {
+  fill: #64748b;
+  font-size: 0.8rem;
+}
+
 .chartLegend {
   display: flex;
   flex-wrap: wrap;

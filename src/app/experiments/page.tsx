@@ -109,6 +109,14 @@ function ChartGrid({
   );
 }
 
+function getTickValues(min: number, max: number) {
+  if (min === max) {
+    return [min];
+  }
+
+  return [max, min + (max - min) * 0.75, min + (max - min) * 0.5, min + (max - min) * 0.25, min];
+}
+
 function TocChart({ result }: { result: ExperimentResult }) {
   const policies = POLICY_ORDER
     .map((key) => result.evaluation?.policies?.[key])
@@ -117,62 +125,65 @@ function TocChart({ result }: { result: ExperimentResult }) {
   const allTocValues = policies.flatMap((policy) => policy.toc);
   const min = Math.min(0, ...allTocValues);
   const max = Math.max(0, ...allTocValues);
-  const width = 680;
-  const height = 260;
+  const svgWidth = 680;
+  const svgHeight = 320;
+  const margin = { top: 12, right: 10, bottom: 34, left: 58 };
+  const width = svgWidth - margin.left - margin.right;
+  const height = svgHeight - margin.top - margin.bottom;
   const zeroY = height - ((0 - min) / (max - min || 1)) * height;
   const maxLabel = max.toFixed(3);
   const minLabel = min.toFixed(3);
+  const yTicks = getTickValues(min, max);
 
   return (
     <div className="chartCard">
       <div className="chartHeader">
         <div>
-          <h3>ML-AUTOC by Budget</h3>
-          <p>Each line shows the per-budget ML-AUTOC curve returned by the backend.</p>
+          <h3>ML-TOC by Budget</h3>
+          <p>Each line shows the per-budget ML-TOC curve returned by the backend.</p>
         </div>
       </div>
 
-      <svg viewBox={`0 0 ${width} ${height}`} className="chartSvg" role="img" aria-label="ML-AUTOC line chart">
-        <ChartGrid
-          width={width}
-          height={height}
-          horizontalFractions={[0.25, 0.5, 0.75]}
-          verticalFractions={[0.25, 0.5, 0.75]}
-        />
-        <line x1="0" y1="0" x2="0" y2={height} className="chartAxis" />
-        <line x1="0" y1={height} x2={width} y2={height} className="chartAxis" />
-        <line x1="0" y1={zeroY} x2={width} y2={zeroY} className="chartAxisSecondary" />
-        {policies.map((policy) => (
-          <path
-            key={policy.policy_key}
-            d={buildLinePath(policy.toc, width, height, min, max)}
-            fill="none"
-            stroke={POLICY_COLORS[policy.policy_key]}
-            strokeWidth="3"
-            strokeLinecap="round"
+      <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="chartSvg" role="img" aria-label="ML-AUTOC line chart">
+        <g transform={`translate(${margin.left}, ${margin.top})`}>
+          <ChartGrid
+            width={width}
+            height={height}
+            horizontalFractions={[0.25, 0.5, 0.75]}
+            verticalFractions={[0.25, 0.5, 0.75]}
           />
-        ))}
+          <line x1="0" y1="0" x2="0" y2={height} className="chartAxis" />
+          <line x1="0" y1={height} x2={width} y2={height} className="chartAxis" />
+          <line x1="0" y1={zeroY} x2={width} y2={zeroY} className="chartAxisSecondary" />
+          {yTicks.map((tick) => {
+            const y = height - ((tick - min) / (max - min || 1)) * height;
+            return (
+              <text key={tick} x="-10" y={y + 4} textAnchor="end" className="chartTickLabel">
+                {tick.toFixed(3)}
+              </text>
+            );
+          })}
+          <text x="0" y={height + 24} textAnchor="start" className="chartTickLabel">
+            1
+          </text>
+          <text x={width / 2} y={height + 24} textAnchor="middle" className="chartTickLabel">
+            {Math.round(result.evaluation.shape.budget / 2)}
+          </text>
+          <text x={width} y={height + 24} textAnchor="end" className="chartTickLabel">
+            {result.evaluation.shape.budget}
+          </text>
+          {policies.map((policy) => (
+            <path
+              key={policy.policy_key}
+              d={buildLinePath(policy.toc, width, height, min, max)}
+              fill="none"
+              stroke={POLICY_COLORS[policy.policy_key]}
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+          ))}
+        </g>
       </svg>
-
-      <div className="chartScale">
-        <span>{`Max: ${maxLabel}`}</span>
-        <span>{`Zero: 0.000`}</span>
-        <span>{`Min: ${minLabel}`}</span>
-      </div>
-
-      <div className="chartFootnote">
-        <span>Budget 1</span>
-        <span>{`Budget ${result.evaluation.shape.budget}`}</span>
-      </div>
-
-      <div className="chartLegend">
-        {policies.map((policy) => (
-          <div key={policy.policy_key} className="legendItem">
-            <span className="legendSwatch" style={{ backgroundColor: POLICY_COLORS[policy.policy_key] }} />
-            <span>{`${policy.policy_name}: ${policy.toc.at(-1)?.toFixed(3) || "0.000"}`}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -188,9 +199,13 @@ function AllocationChart({
 }) {
   const policy = result.evaluation?.policies?.[selectedPolicy];
   const series = policy?.allocation_by_level || [];
-  const width = 680;
-  const height = 260;
+  const svgWidth = 680;
+  const svgHeight = 320;
+  const margin = { top: 12, right: 10, bottom: 34, left: 58 };
+  const width = svgWidth - margin.left - margin.right;
+  const height = svgHeight - margin.top - margin.bottom;
   const maxAllocation = Math.max(1, ...series.flat());
+  const yTicks = getTickValues(0, maxAllocation);
 
   return (
     <div className="chartCard">
@@ -213,52 +228,48 @@ function AllocationChart({
         </select>
       </div>
 
-      <svg viewBox={`0 0 ${width} ${height}`} className="chartSvg" role="img" aria-label="Allocation line chart">
-        <ChartGrid
-          width={width}
-          height={height}
-          horizontalFractions={[0.25, 0.5, 0.75]}
-          verticalFractions={[0.25, 0.5, 0.75]}
-        />
-        <line x1="0" y1="0" x2="0" y2={height} className="chartAxis" />
-        <line x1="0" y1={height} x2={width} y2={height} className="chartAxis" />
-        {series[0]?.map((_, levelIndex) => {
-          const levelSeries = series.map((row) => row[levelIndex] || 0);
-          return (
-            <path
-              key={`${selectedPolicy}-${levelIndex}`}
-              d={buildLinePath(levelSeries, width, height, 0, maxAllocation)}
-              fill="none"
-              stroke={LEVEL_COLORS[levelIndex % LEVEL_COLORS.length]}
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-          );
-        })}
+      <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="chartSvg" role="img" aria-label="Allocation line chart">
+        <g transform={`translate(${margin.left}, ${margin.top})`}>
+          <ChartGrid
+            width={width}
+            height={height}
+            horizontalFractions={[0.25, 0.5, 0.75]}
+            verticalFractions={[0.25, 0.5, 0.75]}
+          />
+          <line x1="0" y1="0" x2="0" y2={height} className="chartAxis" />
+          <line x1="0" y1={height} x2={width} y2={height} className="chartAxis" />
+          {yTicks.map((tick) => {
+            const y = height - (tick / (maxAllocation || 1)) * height;
+            return (
+              <text key={tick} x="-10" y={y + 4} textAnchor="end" className="chartTickLabel">
+                {Math.round(tick)}
+              </text>
+            );
+          })}
+          <text x="0" y={height + 24} textAnchor="start" className="chartTickLabel">
+            1
+          </text>
+          <text x={width / 2} y={height + 24} textAnchor="middle" className="chartTickLabel">
+            {Math.round(result.evaluation.shape.budget / 2)}
+          </text>
+          <text x={width} y={height + 24} textAnchor="end" className="chartTickLabel">
+            {result.evaluation.shape.budget}
+          </text>
+          {series[0]?.map((_, levelIndex) => {
+            const levelSeries = series.map((row) => row[levelIndex] || 0);
+            return (
+              <path
+                key={`${selectedPolicy}-${levelIndex}`}
+                d={buildLinePath(levelSeries, width, height, 0, maxAllocation)}
+                fill="none"
+                stroke={LEVEL_COLORS[levelIndex % LEVEL_COLORS.length]}
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            );
+          })}
+        </g>
       </svg>
-
-      <div className="chartScale">
-        <span>{`Max allocations: ${maxAllocation}`}</span>
-        <span>{`Mid: ${Math.round(maxAllocation / 2)}`}</span>
-        <span>0</span>
-      </div>
-
-      <div className="chartFootnote">
-        <span>Budget 1</span>
-        <span>{`Budget ${result.evaluation.shape.budget}`}</span>
-      </div>
-
-      <div className="chartLegend">
-        {series[0]?.map((_, levelIndex) => (
-          <div key={levelIndex} className="legendItem">
-            <span
-              className="legendSwatch"
-              style={{ backgroundColor: LEVEL_COLORS[levelIndex % LEVEL_COLORS.length] }}
-            />
-            <span>{`Level ${levelIndex + 1}: ${series.at(-1)?.[levelIndex] || 0}`}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -277,7 +288,6 @@ function TimeChart({ result }: { result: ExperimentResult }) {
       <div className="chartHeader">
         <div>
           <h3>Policy Runtime</h3>
-          <p>Measured on the backend during the current experiment run.</p>
         </div>
       </div>
 
@@ -297,11 +307,6 @@ function TimeChart({ result }: { result: ExperimentResult }) {
             <div className="barValue">{formatDuration(entry.value)}</div>
           </div>
         ))}
-      </div>
-
-      <div className="chartFootnote">
-        <span>Fastest relative to this run</span>
-        <span>{`Max: ${formatDuration(maxValue)}`}</span>
       </div>
     </div>
   );
