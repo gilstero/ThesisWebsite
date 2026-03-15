@@ -250,7 +250,7 @@
 
 .areaOutputGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -289,4 +289,163 @@
   font-size: 1rem;
   text-align: center;
   padding: 20px;
+}
+
+.resultsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.chartCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.chartHeader {
+  margin-bottom: 14px;
+}
+
+.chartHeader h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #111827;
+}
+
+.chartHeader p {
+  margin: 6px 0 0;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.chartHeaderSplit {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.chartSelect {
+  min-width: 120px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  font-size: 0.95rem;
+}
+
+.chartSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.chartAxis {
+  stroke: #cbd5e1;
+  stroke-width: 1.5;
+}
+
+.chartLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.chartScale,
+.chartFootnote {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: #374151;
+}
+
+.legendSwatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.barChart {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: 70px 1fr 90px;
+  gap: 12px;
+  align-items: center;
+}
+
+.barLabel,
+.barValue {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.barValue {
+  text-align: right;
+}
+
+.barTrack {
+  height: 18px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 999px;
+  min-width: 6px;
+}
+
+@media (max-width: 980px) {
+  .experimentLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .controls,
+  .output {
+    padding: 24px;
+  }
+
+  .areaOutputGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .areaOutputGrid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .chartHeaderSplit {
+    flex-direction: column;
+  }
+
+  .barRow {
+    grid-template-columns: 1fr;
+  }
+
+  .barValue {
+    text-align: left;
+  }
 }

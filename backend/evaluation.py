@@ -155,9 +155,11 @@ def evaluate_action_ranking(
 
     total = np.zeros(B, dtype=float)
     avg = np.zeros(B, dtype=float)
+    allocation_by_level = np.zeros((B, L), dtype=int)
 
     running_total = 0.0
     K = min(B, actions.shape[0])
+    level_counts = np.zeros(L, dtype=int)
 
     for b in range(K):
         i = int(actions[b, 0])
@@ -171,13 +173,16 @@ def evaluate_action_ranking(
         running_total += float(delta[i, ell])
         total[b] = running_total
         avg[b] = running_total / (b + 1)
+        level_counts[ell] += 1
+        allocation_by_level[b] = level_counts
 
     if K > 0 and K < B:
         total[K:] = total[K - 1]
         avg[K:] = avg[K - 1]
+        allocation_by_level[K:] = allocation_by_level[K - 1]
 
     toc = avg - baseline
-    area = float(np.sum(toc))
+    area = float(np.sum(toc) / B)
 
     return {
         "output_type": "ranking",
@@ -185,6 +190,7 @@ def evaluate_action_ranking(
         "avg_ate": avg.tolist(),
         "toc": toc.tolist(),
         "total_effect": total.tolist(),
+        "allocation_by_level": allocation_by_level.tolist(),
         "area": area,
     }
 
@@ -197,14 +203,18 @@ def evaluate_pag_star_output(
     """
     Evaluate PAG* output represented as a cumulative allocation-by-budget matrix.
     """
+    _, L, _ = _validate_delta(delta)
     toc, avg, total = toc_from_alloc_matrix(alloc, delta, baseline)
-    area = float(np.sum(toc))
+    allocation_by_level = alloc.reshape(alloc.shape[0], -1, L).sum(axis=1)
+    _, _, B = _validate_delta(delta)
+    area = float(np.sum(toc) / B)
 
     return {
         "output_type": "allocation_matrix",
         "avg_ate": avg.tolist(),
         "toc": toc.tolist(),
         "total_effect": total.tolist(),
+        "allocation_by_level": allocation_by_level.tolist(),
         "area": area,
     }
 

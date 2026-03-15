@@ -4,6 +4,7 @@ import json
 import uuid
 import threading
 import traceback
+import time
 
 import numpy as np
 from fastapi import FastAPI, Form, File, UploadFile, HTTPException
@@ -32,6 +33,7 @@ app.add_middleware(
         "https://www.mlautoc.com",
         "https://mlautoc.com",
     ],
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3})(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -259,6 +261,7 @@ def run_experiment_job(
         )
 
         policy_outputs = {}
+        timings_ms = {}
 
         set_experiment(
             experiment_id,
@@ -266,7 +269,9 @@ def run_experiment_job(
             status="running",
             message="Running LFP",
         )
+        start = time.perf_counter()
         policy_outputs["lfp"] = solve_lfp(delta)
+        timings_ms["lfp"] = round((time.perf_counter() - start) * 1000, 3)
 
         set_experiment(
             experiment_id,
@@ -274,7 +279,9 @@ def run_experiment_job(
             status="running",
             message="Running PAG",
         )
+        start = time.perf_counter()
         policy_outputs["pag"] = solve_pag(delta)
+        timings_ms["pag"] = round((time.perf_counter() - start) * 1000, 3)
 
         set_experiment(
             experiment_id,
@@ -282,7 +289,9 @@ def run_experiment_job(
             status="running",
             message="Running PAG*",
         )
+        start = time.perf_counter()
         policy_outputs["pag_star"] = solve_pag_star(delta)
+        timings_ms["pag_star"] = round((time.perf_counter() - start) * 1000, 3)
 
         set_experiment(
             experiment_id,
@@ -290,7 +299,9 @@ def run_experiment_job(
             status="running",
             message="Running IFP",
         )
+        start = time.perf_counter()
         policy_outputs["ifp"] = solve_ifp(delta)
+        timings_ms["ifp"] = round((time.perf_counter() - start) * 1000, 3)
 
         set_experiment(
             experiment_id,
@@ -298,7 +309,9 @@ def run_experiment_job(
             status="running",
             message="Running PGP",
         )
+        start = time.perf_counter()
         policy_outputs["pgp"] = solve_pgp(delta)
+        timings_ms["pgp"] = round((time.perf_counter() - start) * 1000, 3)
 
         set_experiment(
             experiment_id,
@@ -323,6 +336,7 @@ def run_experiment_job(
             },
             "costMatrix": cost_matrix.tolist(),
             "evaluation": evaluation,
+            "timingsMs": timings_ms,
         }
 
         set_experiment(
