@@ -60,6 +60,14 @@ function formatPolicyName(policyKey: string) {
   return displayNames[policyKey] || policyKey.toUpperCase();
 }
 
+function formatDuration(milliseconds: number) {
+  if (milliseconds >= 1000) {
+    return `${(milliseconds / 1000).toFixed(3)} s`;
+  }
+
+  return `${milliseconds.toFixed(3)} ms`;
+}
+
 function buildLinePath(values: number[], width: number, height: number, min: number, max: number) {
   if (values.length === 0) {
     return "";
@@ -74,6 +82,31 @@ function buildLinePath(values: number[], width: number, height: number, min: num
       return `${index === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
     })
     .join(" ");
+}
+
+function ChartGrid({
+  width,
+  height,
+  horizontalFractions,
+  verticalFractions,
+}: {
+  width: number;
+  height: number;
+  horizontalFractions: number[];
+  verticalFractions: number[];
+}) {
+  return (
+    <>
+      {horizontalFractions.map((fraction) => {
+        const y = height * fraction;
+        return <line key={`h-${fraction}`} x1="0" y1={y} x2={width} y2={y} className="chartGrid" />;
+      })}
+      {verticalFractions.map((fraction) => {
+        const x = width * fraction;
+        return <line key={`v-${fraction}`} x1={x} y1="0" x2={x} y2={height} className="chartGrid" />;
+      })}
+    </>
+  );
 }
 
 function TocChart({ result }: { result: ExperimentResult }) {
@@ -100,7 +133,15 @@ function TocChart({ result }: { result: ExperimentResult }) {
       </div>
 
       <svg viewBox={`0 0 ${width} ${height}`} className="chartSvg" role="img" aria-label="ML-AUTOC line chart">
-        <line x1="0" y1={zeroY} x2={width} y2={zeroY} className="chartAxis" />
+        <ChartGrid
+          width={width}
+          height={height}
+          horizontalFractions={[0.25, 0.5, 0.75]}
+          verticalFractions={[0.25, 0.5, 0.75]}
+        />
+        <line x1="0" y1="0" x2="0" y2={height} className="chartAxis" />
+        <line x1="0" y1={height} x2={width} y2={height} className="chartAxis" />
+        <line x1="0" y1={zeroY} x2={width} y2={zeroY} className="chartAxisSecondary" />
         {policies.map((policy) => (
           <path
             key={policy.policy_key}
@@ -115,7 +156,7 @@ function TocChart({ result }: { result: ExperimentResult }) {
 
       <div className="chartScale">
         <span>{`Max: ${maxLabel}`}</span>
-        <span>0.000</span>
+        <span>{`Zero: 0.000`}</span>
         <span>{`Min: ${minLabel}`}</span>
       </div>
 
@@ -173,6 +214,13 @@ function AllocationChart({
       </div>
 
       <svg viewBox={`0 0 ${width} ${height}`} className="chartSvg" role="img" aria-label="Allocation line chart">
+        <ChartGrid
+          width={width}
+          height={height}
+          horizontalFractions={[0.25, 0.5, 0.75]}
+          verticalFractions={[0.25, 0.5, 0.75]}
+        />
+        <line x1="0" y1="0" x2="0" y2={height} className="chartAxis" />
         <line x1="0" y1={height} x2={width} y2={height} className="chartAxis" />
         {series[0]?.map((_, levelIndex) => {
           const levelSeries = series.map((row) => row[levelIndex] || 0);
@@ -246,14 +294,14 @@ function TimeChart({ result }: { result: ExperimentResult }) {
                 }}
               />
             </div>
-            <div className="barValue">{entry.value.toFixed(3)} ms</div>
+            <div className="barValue">{formatDuration(entry.value)}</div>
           </div>
         ))}
       </div>
 
       <div className="chartFootnote">
         <span>Fastest relative to this run</span>
-        <span>{`Max: ${maxValue.toFixed(3)} ms`}</span>
+        <span>{`Max: ${formatDuration(maxValue)}`}</span>
       </div>
     </div>
   );
